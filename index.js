@@ -1,12 +1,13 @@
 import express from 'express';
 import 'dotenv/config.js';
-import { setRoutes } from './src/routes.js';
 
+import { setRoutes } from './src/routes.js';
+import { logger } from './src/logger.js';
 
 const port = process.env.PORT || 3001;
 const app = express();
 setRoutes(app);
 
 app.listen(port, () => {
-  console.log(`listening on ${port}`);
+  logger.info(`listening on ${port}`);
 });
