@@ -19,6 +19,7 @@ export const logger = createLogger({
       format.label({ label: '[LINE]' }),
       format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' })
     ),
+  
     transports: [
       new transports.Console({
         format: format.combine(
@@ -30,6 +31,7 @@ export const logger = createLogger({
           )
         )
       }),
+    
       new transports.File({
         filename,
         format: format.combine(
