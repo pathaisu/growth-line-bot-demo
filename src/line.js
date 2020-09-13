@@ -1,4 +1,7 @@
+import line from '@line/bot-sdk';
+import axios from 'axios';
 import 'dotenv/config.js';
+
 import { setSpreadsheetData } from './utils/spreadsheet/index.js';
 
 const config = {
@@ -12,6 +15,8 @@ const lineHeader = {
 };
 
 export const client = new line.Client(config);
+
+export const middleware = line.middleware(config);
 
 export const handleCallbackEvent = async (event) => {
   if (event.type === 'follow') {
@@ -34,4 +39,12 @@ export const handleCallbackEvent = async (event) => {
 
   // use reply API
   return client.replyMessage(event.replyToken, echo);
+}
+
+export const handlePushEvent = async () => {
+  const replyPayload = await client.pushMessage('Uaeef12de300b2ee0834ddd51981fa5ea', {
+    type: 'text', text: 'Test push message naja',
+  });
+
+  return replyPayload;
 }
