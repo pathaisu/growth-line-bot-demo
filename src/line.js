@@ -15,35 +15,43 @@ const lineHeader = {
 };
 
 export const client = new line.Client(config);
-
 export const middleware = line.middleware(config);
 
-export const handleCallbackEvent = async (event) => {
-  if (event.type === 'follow') {
-    const { data } = await axios.get(`https://api.line.me/v2/bot/profile/${event.source.userId}`, {
+const handleNewFollower = async () => {
+  const { data } = await axios.get(
+    `${LINE_GET_PROFILE_URL}/${event.source.userId}`, {
       headers: {
         ...lineHeader,
       }
     });
 
-    setSpreadsheetData(data);
+  setSpreadsheetData(data);
+}
+
+/** Support only type text */
+export const handleCallbackEvent = async (event) => {
+  if (event.type === 'follow') {
+    handleNewFollower();
   }
 
+  /** ignore non-text-message event */
   if (event.type !== 'message' || event.message.type !== 'text') {
-    // ignore non-text-message event
     return Promise.resolve(null);
   }
 
-  // create a echoing text message
-  const echo = { type: 'text', text: `Reply From Lucky :) - ${event.message.text}` };
+  const echo = {
+    type: 'text', 
+    text: `Reply From Lucky :) - ${event.message.text}` 
+  };
 
-  // use reply API
   return client.replyMessage(event.replyToken, echo);
 }
 
-export const handlePushEvent = async () => {
-  const replyPayload = await client.pushMessage('Uaeef12de300b2ee0834ddd51981fa5ea', {
-    type: 'text', text: 'Test push message naja',
+/** Support only type text */
+export const handlePushEvent = async (to, text) => {
+  const replyPayload = await client.pushMessage(to, {
+    type: 'text',
+    text,
   });
 
   return replyPayload;
