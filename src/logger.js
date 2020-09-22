@@ -16,7 +16,7 @@ const filename = path.join(logDir, 'results.log');
 export const logger = createLogger({
     level: env === 'production' ? 'info' : 'debug',
     format: format.combine(
-      format.label({ label: '[LINE]' }),
+      format.label({ label: 'LINE' }),
       format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' })
     ),
   
