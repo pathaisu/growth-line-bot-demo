@@ -2,7 +2,7 @@ import line from '@line/bot-sdk';
 import axios from 'axios';
 import 'dotenv/config.js';
 
-import { setSpreadsheetData } from './utils/spreadsheet/index.js';
+import { setNewFollower } from './utils/spreadsheet/index.js';
 
 const config = {
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
@@ -17,21 +17,22 @@ const lineHeader = {
 export const client = new line.Client(config);
 export const middleware = line.middleware(config);
 
-const handleNewFollower = async () => {
+/** To add new follower */
+const handleNewFollower = async (event) => {
   const { data } = await axios.get(
-    `${LINE_GET_PROFILE_URL}/${event.source.userId}`, {
+    `${process.env.LINE_GET_PROFILE_URL}/${event.source.userId}`, {
       headers: {
         ...lineHeader,
       }
     });
 
-  setSpreadsheetData(data);
+    setNewFollower(data);
 }
 
 /** Support only type text */
 export const handleCallbackEvent = async (event) => {
   if (event.type === 'follow') {
-    handleNewFollower();
+    handleNewFollower(event);
   }
 
   /** ignore non-text-message event */
@@ -49,9 +50,18 @@ export const handleCallbackEvent = async (event) => {
 
 /** Support only type text */
 export const handlePushEvent = async (to, text) => {
+  const { data } = await axios.get(
+    `${process.env.LINE_GET_PROFILE_URL}/${to}`, {
+      headers: {
+        ...lineHeader,
+      }
+    });
+
+  const newText = text.replace('{Nickname}', data.displayName);
+
   const replyPayload = await client.pushMessage(to, {
     type: 'text',
-    text,
+    text: newText,
   });
 
   return replyPayload;
