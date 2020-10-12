@@ -1,0 +1,17 @@
+version: 0.0
+os: linux
+files:
+   - source: .
+     destination: /home/ec2-user/growth-line-bot
+hooks:
+    BeforeInstall:
+      - location: infra/codedeploy/before-install.sh
+        runas: ec2-user
+
+    # AfterInstall:
+    #   - location: infra/codedeploy/after-install.sh
+    #     runas: root
+
+    ApplicationStart:
+      - location: infra/codedeploy/start.sh
+        runas: ec2-user
