@@ -37,7 +37,7 @@ export const setRoutes = (app) => {
     const { text, to } = JSON.parse(JSON.stringify(req.body));
   
     const replyPayload = await handlePushEvent(to, text);
-    logger.info('POST: push message');
+    logger.info(`POST: push message to ${to}`);
   
     res.json(replyPayload);
   }));
