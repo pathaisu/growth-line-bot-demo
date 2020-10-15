@@ -45,7 +45,7 @@ export const handleCallbackEvent = async (event) => {
   }
 
   const replyMsg = 'ขอต้อนรับสู่ GROWTHai'
-  const demoMsg = 'ขอต้อนรับสู่ GROWTHai demo journey ที่จะพาคุณไปทดลองสัมผัสประสบการ์ณตรงจากระบบการตลาดอัตโนมัติผ่านช่องทางแสนสะดวก LINE email และ SMS หากมีคำถามติดต่อพวกเราที่ info@analytist.co หรือ 02-1752695';
+  const demoMsg = 'ขอต้อนรับสู่ GROWTHai demo journey ที่จะพาคุณไปทดลองสัมผัสประสบการ์ณตรงจากระบบการตลาดอัตโนมัติผ่านช่องทางแสนสะดวก LINE email และ SMS เพียงกรอกข้อมูลนี้ให้ครบแล้วเราจะเริ่ม demo journey ทันทีค่ะ';
 
   let echo = {
     type: 'text', 
