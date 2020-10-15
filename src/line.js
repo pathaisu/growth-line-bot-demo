@@ -3,6 +3,10 @@ import axios from 'axios';
 import 'dotenv/config.js';
 
 import { setNewFollower } from './utils/spreadsheet/index.js';
+import {
+  ONBOARDING_COMMAND,
+  ONBOARDING_URL,
+} from './utils/config.js';
 
 const config = {
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
@@ -40,10 +44,17 @@ export const handleCallbackEvent = async (event) => {
     return Promise.resolve(null);
   }
 
-  const echo = {
+  const replyMsg = 'ขอต้อนรับสู่ GROWTHai'
+  const demoMsg = 'ขอต้อนรับสู่ GROWTHai demo journey ที่จะพาคุณไปทดลองสัมผัสประสบการ์ณตรงจากระบบการตลาดอัตโนมัติผ่านช่องทางแสนสะดวก LINE email และ SMS หากมีคำถามติดต่อพวกเราที่ info@analytist.co หรือ 02-1752695';
+
+  let echo = {
     type: 'text', 
-    text: `Reply From Lucky :) - ${event.message.text}` 
+    text: replyMsg, 
   };
+
+  if (event.message.text === ONBOARDING_COMMAND) {
+    echo.text = `${demoMsg}\n${ONBOARDING_URL}?lineId=${event.source.userId}`;
+  }
 
   return client.replyMessage(event.replyToken, echo);
 }
