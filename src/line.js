@@ -68,7 +68,13 @@ export const handlePushEvent = async (to, text) => {
       }
     });
 
-  const newText = text.replace('{Nickname}', data.displayName);
+  let replaceText = text;
+
+  if (text === 'สวัสดีค่ะ คุณ {Nickname} ยินดีต้อนรับสู่ Demo ค่ะ') {
+    replaceText = 'ขอบคุณนะคะ คุณ {Nickname}  ที่สนใจชม GROWTHai demo journey ที่ขณะนี้ได้เริ่มต้นขึ้นแล้ว คุณจะได้รับข้อความแบบอัตโนมัติจากหลากหลายช่องทาง ที่ตอบสนองต่อความสนใจที่แตกต่างกันไป ลองกลับเข้ามาที่เวบเราอีกครั้งสิคะ www.growthai.co';
+  }
+
+  const newText = replaceText.replace('{Nickname}', data.displayName);
 
   const replyPayload = await client.pushMessage(to, {
     type: 'text',
