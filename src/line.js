@@ -74,6 +74,7 @@ export const handlePushEvent = async (to, text) => {
     let replaceText = text;
 
     const newText = replace(replaceText, /{Nickname}/g, data.displayName);
+    logger.info(`New message: ${newText}`);
 
     const replyPayload = await client.pushMessage(to, {
       type: 'text',
