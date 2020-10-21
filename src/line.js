@@ -61,21 +61,26 @@ export const handleCallbackEvent = async (event) => {
 
 /** Support only type text */
 export const handlePushEvent = async (to, text) => {
-  const { data } = await axios.get(
-    `${process.env.LINE_GET_PROFILE_URL}/${to}`, {
-      headers: {
-        ...lineHeader,
-      }
+  try {
+    const { data } = await axios.get(
+      `${process.env.LINE_GET_PROFILE_URL}/${to}`, {
+        headers: {
+          ...lineHeader,
+        }
+      });
+
+    let replaceText = text;
+
+    const newText = replaceText.replace('{Nickname}', data.displayName);
+
+    const replyPayload = await client.pushMessage(to, {
+      type: 'text',
+      text: newText,
     });
 
-  let replaceText = text;
-
-  const newText = replaceText.replace('{Nickname}', data.displayName);
-
-  const replyPayload = await client.pushMessage(to, {
-    type: 'text',
-    text: newText,
-  });
-
-  return replyPayload;
+    return replyPayload;
+  } catch(e) {
+    console.log('error from push message: ', e);
+    return { request: 'fail' };
+  }
 }
