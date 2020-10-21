@@ -1,9 +1,10 @@
 import line from '@line/bot-sdk';
 import axios from 'axios';
+import replace from 'lodash/replace.js';
 import 'dotenv/config.js';
-import 'lodash/replace.js';
 
 import { setNewFollower } from './utils/spreadsheet/index.js';
+import { logger } from './logger.js';
 import {
   ONBOARDING_COMMAND,
   ONBOARDING_URL,
@@ -73,7 +74,7 @@ export const handlePushEvent = async (to, text) => {
     let replaceText = text;
 
     const newText = replace(replaceText, /{Nickname}/g, data.displayName);
-    console.log(`New message: ${newText}`);
+    logger.info(`New message: ${newText}`);
 
     const replyPayload = await client.pushMessage(to, {
       type: 'text',
@@ -82,7 +83,7 @@ export const handlePushEvent = async (to, text) => {
 
     return replyPayload;
   } catch(e) {
-    console.error('error from push message: ', e);
+    logger.error('error from push message: ', e);
     return { request: 'fail' };
   }
 }
