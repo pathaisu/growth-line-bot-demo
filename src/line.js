@@ -46,6 +46,13 @@ export const handleCallbackEvent = async (event) => {
     return Promise.resolve(null);
   }
 
+  const { data } = await axios.get(
+    `${process.env.LINE_GET_PROFILE_URL}/${event.source.userId}`, {
+      headers: {
+        ...lineHeader,
+      }
+    });
+
   const replyMsg = 'ขอต้อนรับสู่ GROWTHai'
   const demoMsg = '🙏ขอต้อนรับสู่ GROWTHai demo journey ที่จะพาคุณไปทดลองสัมผัสประสบการ์ณตรงจากระบบการตลาดอัตโนมัติผ่านช่องทางแสนสะดวก LINE email และ SMS\n\n✍️เพียงกรอกข้อมูลนี้ให้ครบแล้วเราจะเริ่ม demo journey ทันทีค่ะ';
 
@@ -55,7 +62,7 @@ export const handleCallbackEvent = async (event) => {
   };
 
   if (event.message.text === ONBOARDING_COMMAND) {
-    echo.text = `${demoMsg}\n${ONBOARDING_URL}?lineId=${event.source.userId}`;
+    echo.text = `${demoMsg}\n${ONBOARDING_URL}?lineId=${event.source.userId}&pictureUrl=${data.pictureUrl}`;
   }
 
   return client.replyMessage(event.replyToken, echo);
@@ -72,8 +79,9 @@ export const handlePushEvent = async (to, text) => {
       });
 
     let replaceText = text;
-
+    
     const newText = replace(replaceText, /{Nickname}/g, data.displayName);
+    logger.info(`Original message: ${text}`);
     logger.info(`New message: ${newText}`);
 
     const replyPayload = await client.pushMessage(to, {
