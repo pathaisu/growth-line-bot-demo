@@ -1,97 +1,59 @@
-import line from '@line/bot-sdk';
 import axios from 'axios';
 import replace from 'lodash/replace.js';
 import 'dotenv/config.js';
 
-import { setNewFollower } from './utils/spreadsheet/index.js';
 import { logger } from './logger.js';
 import {
   ONBOARDING_COMMAND,
   ONBOARDING_URL,
+  DEFAULT_REPLY_MESSAGE,
+  DEFAULT_DEMO_MESSAGE,
 } from './utils/config.js';
 
-const config = {
-  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
-  channelSecret: process.env.CHANNEL_SECRET,
-};
+export const handlePushEvent = async (headers, to, text) => {
+  let message = {
+    type: 'text', 
+    text, 
+  };
 
-const lineHeader = {
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${process.env.CHANNEL_ACCESS_TOKEN}`,
-};
+  if (!text.includes('{Nickname}')) return message;
 
-export const client = new line.Client(config);
-export const middleware = line.middleware(config);
-
-/** To add new follower */
-const handleNewFollower = async (event) => {
   const { data } = await axios.get(
-    `${process.env.LINE_GET_PROFILE_URL}/${event.source.userId}`, {
-      headers: {
-        ...lineHeader,
-      }
-    });
+    `${process.env.LINE_GET_PROFILE_URL}/${to}`, {
+      headers,
+  });
+  
+  message.text = replace(text, /{Nickname}/g, data.displayName);
+  logger.info(`Original message: ${text}`);
+  logger.info(`New message: ${message.text}`);
 
-    setNewFollower(data);
+  return message;
 }
 
-/** Support only type text */
-export const handleCallbackEvent = async (event) => {
-  if (event.type === 'follow') {
-    handleNewFollower(event);
-  }
-
+export const handleCallbackEvent = async (headers, event) => {
   /** ignore non-text-message event */
-  if (event.type !== 'message' || event.message.type !== 'text') {
-    return Promise.resolve(null);
-  }
+  if (event.type !== 'message' || event.message.type !== 'text') return;
 
   const { data } = await axios.get(
     `${process.env.LINE_GET_PROFILE_URL}/${event.source.userId}`, {
-      headers: {
-        ...lineHeader,
-      }
+      headers,
     });
 
-  const replyMsg = 'ขอต้อนรับสู่ GROWTHai'
-  const demoMsg = '🙏ขอต้อนรับสู่ GROWTHai demo journey ที่จะพาคุณไปทดลองสัมผัสประสบการ์ณตรงจากระบบการตลาดอัตโนมัติผ่านช่องทางแสนสะดวก LINE email และ SMS\n\n✍️เพียงกรอกข้อมูลนี้ให้ครบแล้วเราจะเริ่ม demo journey ทันทีค่ะ';
-
-  let echo = {
+  let message = {
     type: 'text', 
-    text: replyMsg, 
+    text: DEFAULT_REPLY_MESSAGE, 
   };
 
   if (event.message.text === ONBOARDING_COMMAND) {
-    echo.text = `${demoMsg}\n${ONBOARDING_URL}?lineId=${event.source.userId}&pictureUrl=${data.pictureUrl}`;
+    message.text = `${DEFAULT_DEMO_MESSAGE}\n${ONBOARDING_URL}?lineId=${event.source.userId}&pictureUrl=${data.pictureUrl}`;
   }
 
-  return client.replyMessage(event.replyToken, echo);
+  return message;
 }
 
-/** Support only type text */
-export const handlePushEvent = async (to, text) => {
-  try {
-    const { data } = await axios.get(
-      `${process.env.LINE_GET_PROFILE_URL}/${to}`, {
-        headers: {
-          ...lineHeader,
-        }
-      });
-
-    let replaceText = text;
-    
-    const newText = replace(replaceText, /{Nickname}/g, data.displayName);
-    logger.info(`Original message: ${text}`);
-    logger.info(`New message: ${newText}`);
-
-    const replyPayload = await client.pushMessage(to, {
-      type: 'text',
-      text: newText,
-    });
-
-    return replyPayload;
-  } catch(e) {
-    logger.error('error from push message: ', e);
-    return { request: 'fail' };
-  }
+export const getLineHeaders = (channelAccessToken) => {
+  return ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${channelAccessToken}`,
+  });
 }

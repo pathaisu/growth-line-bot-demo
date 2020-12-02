@@ -1,63 +1,65 @@
 import asyncHandler from 'express-async-handler';
 import bodyParser from 'body-parser';
-import { 
-  getSpreadsheetData, 
-  setShouldSend,
-} from './utils/spreadsheet/index.js';
+import 'dotenv/config.js';
+
 import { logger } from './logger.js';
+
 import {
-  middleware,
-  handleCallbackEvent,
+  pushMessage, 
+  replyMessage,
+} from './utils/services.js';
+
+import {
   handlePushEvent,
+  handleCallbackEvent,
+  getLineHeaders,
 } from './line.js';
+
 
 const jsonParser = bodyParser.json();
 
 export const setRoutes = (app) => {
-  app.get('/followers', asyncHandler(async (_, res) => {
-    const payload = await getSpreadsheetData();
-    logger.info('GET: get followers');
-    
-    res.json(payload);
-  })); 
-  
-  app.post('/callback', middleware, (req, res) => {
+  app.post('/callback', jsonParser, asyncHandler(async (req) => {
     logger.info('POST: reply message');
 
-    Promise
-      .all(req.body.events.map(handleCallbackEvent))
-      .then((result) => res.json(result))
-      .catch((err) => {
-        logger.error(err);
-        res.status(500).end();
-      });
-  });
-  
-  app.post('/push', jsonParser, asyncHandler(async (req, res) => {
-    const { text, to } = JSON.parse(JSON.stringify(req.body));
-  
-    const replyPayload = await handlePushEvent(to, text);
-    logger.info(`POST: push message to ${to}`);
-  
-    res.json(replyPayload);
+    const event = req.body.events[0] || {};
+
+    const headers = getLineHeaders(process.env.CHANNEL_ACCESS_TOKEN);
+    const message = await handleCallbackEvent(headers,event);
+    const data = {
+      replyToken: event.replyToken,
+      messages: [
+        { ...message },
+      ],
+    };
+
+    await replyMessage(headers, data);
   }));
 
-  app.post('/targeted', jsonParser, asyncHandler(async (req, res) => {
-    const { text } = JSON.parse(JSON.stringify(req.body));
-
-    const followers = await getSpreadsheetData();
-
-    const followersId = followers
-      .filter(user => user.shouldSend === 'TRUE')
-      .map(user => user.userId);
+  app.post('/push', jsonParser, asyncHandler(async (req, res) => {
+    try {
+      const { text, to } = JSON.parse(JSON.stringify(req.body));
     
-    followersId.forEach(to => {
-      handlePushEvent(to, text);
-      setShouldSend(to, false);
-    });
-
-    logger.info('POST: multicast message to targeted followers');
+      logger.info(`POST: push message to ${to}`);
+  
+      // console.log(req.headers.host, req.url, req.baseUrl, req.urlPath);
+  
+      const headers = getLineHeaders(process.env.CHANNEL_ACCESS_TOKEN);
+      const message = await handlePushEvent(headers, to, text);
+      const payload = {
+        to: to,
+        messages: [
+          { ...message },
+        ],
+      };
     
-    res.json({ result: 'sent' });
+      await pushMessage(headers, payload);
+    
+      res.json({ status: 'success' });
+    } catch(e) {
+      logger.error(e);
+
+      res.json({ status: `${e}` })
+    }
   }));
 }
