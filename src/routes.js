@@ -2,7 +2,7 @@ import asyncHandler from 'express-async-handler';
 import bodyParser from 'body-parser';
 import 'dotenv/config.js';
 
-import { logger } from './logger.js';
+import { logger } from './utils/logger.js';
 
 import {
   pushMessage, 
@@ -13,6 +13,7 @@ import {
   handlePushEvent,
   handleCallbackEvent,
   getLineHeaders,
+  getLineConfig,
 } from './line.js';
 
 
@@ -23,9 +24,9 @@ export const setRoutes = (app) => {
     logger.info('POST: reply message');
 
     const event = req.body.events[0] || {};
-
-    const headers = getLineHeaders(process.env.CHANNEL_ACCESS_TOKEN);
-    const message = await handleCallbackEvent(headers,event);
+    const config = getLineConfig(req);
+    const headers = getLineHeaders(config.CHANNEL_ACCESS_TOKEN);
+    const message = await handleCallbackEvent(headers, event, config);
     const data = {
       replyToken: event.replyToken,
       messages: [
@@ -39,12 +40,11 @@ export const setRoutes = (app) => {
   app.post('/push', jsonParser, asyncHandler(async (req, res) => {
     try {
       const { text, to } = JSON.parse(JSON.stringify(req.body));
-    
+  
       logger.info(`POST: push message to ${to}`);
-  
-      // console.log(req.headers.host, req.url, req.baseUrl, req.urlPath);
-  
-      const headers = getLineHeaders(process.env.CHANNEL_ACCESS_TOKEN);
+        
+      const config = getLineConfig(req);
+      const headers = getLineHeaders(config.CHANNEL_ACCESS_TOKEN);
       const message = await handlePushEvent(headers, to, text);
       const payload = {
         to: to,
